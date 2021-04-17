@@ -46,23 +46,26 @@ class MyPromise {
     then = (onResolve, onReject) => {
         let p1 = new MyPromise((resolve, reject) => {
             if (this.status === SUCCESS) {
-                let x = onResolve(this.value)
-                if (x instanceof MyPromise){
-                    x.then(resolve)
-                } else {
-                    resolve(x)
-                }
-
-            } else if (this.status === REJECT) {
-                onReject(this.value)
-            } else if (this.status === PENDING) {
-                this.onResolveCallback.push(()=>{
+                queueMicrotask(()=>{
                     let x = onResolve(this.value)
                     if (x instanceof MyPromise){
                         x.then(resolve)
                     } else {
                         resolve(x)
                     }
+                })
+            } else if (this.status === REJECT) {
+                onReject(this.value)
+            } else if (this.status === PENDING) {
+                this.onResolveCallback.push(()=>{
+                    queueMicrotask(()=>{
+                        let x = onResolve(this.value)
+                        if (x instanceof MyPromise){
+                            x.then(resolve)
+                        } else {
+                            resolve(x)
+                        }
+                    })
                 })
                 this.onRejectCallback.push(onReject)
             }
