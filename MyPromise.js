@@ -46,6 +46,7 @@ class MyPromise {
     then = (onResolve, onReject) => {
         let p1 = new MyPromise((resolve, reject) => {
             if (this.status === SUCCESS) {
+                //增加微任务队列
                 queueMicrotask(()=>{
                     let x = onResolve(this.value)
                     if (x instanceof MyPromise){
