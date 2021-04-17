@@ -23,11 +23,13 @@ class MyPromise {
         if (this.status === PENDING) {
             this.status = SUCCESS
             this.value = v
-            console.log(this.onResolveCallback)
-            while (this.onResolveCallback.length) {
-                const cb = this.onResolveCallback.shift()
-                cb(this.value)
-            }
+
+            queueMicrotask(()=>{
+                while (this.onResolveCallback.length) {
+                    const cb = this.onResolveCallback.shift()
+                    cb(this.value)
+                }
+            })
         }
     }
 
@@ -54,7 +56,14 @@ class MyPromise {
             } else if (this.status === REJECT) {
                 onReject(this.value)
             } else if (this.status === PENDING) {
-                this.onResolveCallback.push(onResolve)
+                this.onResolveCallback.push(()=>{
+                    let x = onResolve(this.value)
+                    if (x instanceof MyPromise){
+                        x.then(resolve)
+                    } else {
+                        resolve(x)
+                    }
+                })
                 this.onRejectCallback.push(onReject)
             }
         })
