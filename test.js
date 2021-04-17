@@ -6,11 +6,12 @@ const p1 = new MyPromise((resolve, reject) => {
     setTimeout(() => {
         resolve('success')
     }, 1000)
+    console.log(1)
     // reject('fail')
 })
 
 p1.then(v => {
-    console.log('1', v)
+    console.log('2', v)
     return new MyPromise((resolve,reject) =>{
         resolve('122223')
     })
@@ -19,4 +20,5 @@ p1.then(v => {
 }).then(v => {
     console.log('next', v)
 })
+
 
