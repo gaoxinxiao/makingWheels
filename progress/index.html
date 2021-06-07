@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <style>
+        *{
+            padding: 0;
+            margin: 0;
+        }
+        #LINE {
+            height: 20px;
+            width: 0;
+            background: purple;
+            color: #fff;
+            text-align: right;
+            padding-right: 20px;
+            box-sizing: border-box;
+        }
+    </style>
+    <div>
+        进度：<span id="VALUE">0</span>%
+        <p id="LINE"></p>
+    </div>
+
+    <script>
+        const controller = new AbortController()
+        let signal = controller.signal;
+        /**
+         * 1.使用fetch返回的response.body属性
+         * 2.response.body有一个getReader()方法
+         * 3.我们需要循环调用getReader().read方法
+         * 4.会返回一个对象包含done和value,如果done为true说明已经读取完成
+         */
+
+        async function getValue() {
+            let response = await fetch('http://localhost:8080/api',{signal});
+            const reader = response.body.getReader();
+
+            const contentLength = +response.headers.get('Content-Length');
+
+            let count = 0
+
+            VALUE.innerHTML = count
+
+            let receiveLength = 0 //接收当前已经加载的字节
+
+            let chunks = [] //接收到的二进制块的数组（包括body）
+
+            setTimeout(()=>{
+                controller.abort();
+            },10)
+
+            while (true) {
+                const {
+                    done,
+                    value
+                } = await reader.read()
+
+                if (done) {
+                    VALUE.innerHTML = 100
+                    break;
+                }
+                VALUE.innerHTML = VALUE.innerHTML < 99 ? ++count : VALUE.innerHTML
+                LINE.style.width = VALUE.innerHTML < 99 ? ++count + '%' : VALUE.innerHTML + '%'
+                chunks.push(value);
+                receiveLength += value.length
+            }
+
+            let chunkAll = new Uint8Array(receiveLength)
+            let position = 0
+
+            for (let chunk of chunks) {
+                chunkAll.set(chunk, position)
+                position += chunk.length
+            }
+
+            let res = new TextDecoder('utf-8').decode(chunkAll)
+
+        }
+
+        getValue()
+    </script>
+
+</body>
+
+</html>
